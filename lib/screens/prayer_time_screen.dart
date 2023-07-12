@@ -1,4 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import '../models/prayer_time.dart';
 
 class PrayerTimeScreen extends StatefulWidget {
   const PrayerTimeScreen({super.key});
@@ -8,6 +11,25 @@ class PrayerTimeScreen extends StatefulWidget {
 }
 
 class _PrayerTimeScreenState extends State<PrayerTimeScreen> {
+
+  PrayerTime time = PrayerTime();
+
+  @override
+  void initState() {
+    getPrayerTime();
+    super.initState();
+  }
+
+  Future<void> getPrayerTime() async {
+    http.Response response = await http.get(Uri.parse("https://dailyprayer.abdulrcs.repl.co/api/karachi"));
+    print(response.statusCode);
+    print(response.body);
+
+    setState(() {
+      time  = PrayerTime.fromJson(jsonDecode(response.body));
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -21,23 +43,23 @@ class _PrayerTimeScreenState extends State<PrayerTimeScreen> {
             height: 50,
           ),
           Text(
-            "Karachi",
+            "${time.city}",
             style: Theme.of(context).textTheme.bodyLarge,
           ),
           const SizedBox(
             height: 10,
           ),
           Text(
-            "Wed,12 Jul 2023",
+            "${time.date}",
             style: Theme.of(context).textTheme.bodyMedium,
           ),
           Spacer(),
-          _timeCard("Fajr", "05:00"),
-          _timeCard("Sunrise", "07:00"),
-          _timeCard("Dhuhr", "12:00"),
-          _timeCard("Asr", "05:00"),
-          _timeCard("Maghrib", "07:00"),
-          _timeCard("Ishak", "09:00"),
+          _timeCard("Fajr", "${time.today?.fajr}"),
+          _timeCard("Sunrise", "${time.today?.sunrise}"),
+          _timeCard("Dhuhr", "${time.today?.dhuhr}"),
+          _timeCard("Asr", "${time.today?.asr}"),
+          _timeCard("Maghrib", "${time.today?.maghrib}"),
+          _timeCard("Ishak", "${time.today?.ishaA}"),
           const SizedBox(
             height: 20,
           ),
