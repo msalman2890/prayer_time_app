@@ -18,8 +18,9 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
           textTheme: const TextTheme(
-              bodyMedium: TextStyle(color: Colors.white, fontSize: 20),
-            bodyLarge: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w600),
+              bodySmall: TextStyle(color: Colors.white, fontSize: 14),
+              bodyMedium: TextStyle(color: Colors.white, fontSize: 18),
+            bodyLarge: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600),
           )),
       home: const SplashScreen(),
     );
