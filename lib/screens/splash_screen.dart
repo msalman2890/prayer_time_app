@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'prayer_time_screen.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+  const SplashScreen();
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();

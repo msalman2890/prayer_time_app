@@ -1,8 +1,10 @@
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:lottie/lottie.dart';
-import '../models/prayer_time.dart';
+
+import '../models/prayer_time_model.dart';
 
 class PrayerTimeScreen extends StatefulWidget {
   const PrayerTimeScreen({super.key});
@@ -15,12 +17,26 @@ class _PrayerTimeScreenState extends State<PrayerTimeScreen> {
   PrayerTime time = PrayerTime();
   bool isLoading = false;
 
-  Future<void> getPrayerTime(String city) async {
+  TextEditingController cityController = TextEditingController();
+  TextEditingController countryController = TextEditingController();
+
+  Future<void> getPrayerTime() async {
     setState(() {
       isLoading = true;
     });
-    http.Response response = await http
-        .get(Uri.parse("https://dailyprayer.abdulrcs.repl.co/api/$city"));
+
+    DateTime date = DateTime.now();
+    String dateFormatted = "${date.day}-${date.month}-${date.year}";
+
+    http.Response response = await http.get(Uri.parse(
+        "https://api.aladhan.com/v1/timingsByCity/$dateFormatted?city=${cityController.text}&country=${countryController.text}"));
+
+    if (response.statusCode != 200) {
+      setState(() {
+        isLoading = false;
+      });
+      return;
+    }
 
     setState(() {
       time = PrayerTime.fromJson(jsonDecode(response.body));
@@ -33,28 +49,55 @@ class _PrayerTimeScreenState extends State<PrayerTimeScreen> {
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
-            image: DecorationImage(image: AssetImage("assets/bg.png"), fit: BoxFit.cover)),
+            image: DecorationImage(
+                image: AssetImage("assets/bg.png"), fit: BoxFit.cover)),
         width: double.infinity,
         padding: const EdgeInsets.all(15),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const SizedBox(
             height: 50,
           ),
-          TextField(
-            style: Theme.of(context).textTheme.bodySmall,
-            decoration: InputDecoration(
-              isDense: true,
-              hintText: "Enter your city",
-              labelText: "City Name",
-              labelStyle: Theme.of(context).textTheme.bodySmall,
-              hintStyle: Theme.of(context).textTheme.bodySmall,
-              border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                  borderSide: BorderSide(color: Colors.white)),
-            ),
-            onSubmitted: (value) {
-              getPrayerTime(value);
-            },
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: cityController,
+                  style: Theme.of(context).textTheme.bodySmall,
+                  decoration: InputDecoration(
+                    isDense: true,
+                    hintText: "Enter your city",
+                    labelText: "City Name",
+                    labelStyle: Theme.of(context).textTheme.bodySmall,
+                    hintStyle: Theme.of(context).textTheme.bodySmall,
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15),
+                        borderSide: BorderSide(color: Colors.white)),
+                  ),
+                ),
+              ),
+              SizedBox(
+                width: 10,
+              ),
+              Expanded(
+                child: TextField(
+                  controller: countryController,
+                  style: Theme.of(context).textTheme.bodySmall,
+                  decoration: InputDecoration(
+                    isDense: true,
+                    hintText: "Enter your country",
+                    labelText: "Country Name",
+                    labelStyle: Theme.of(context).textTheme.bodySmall,
+                    hintStyle: Theme.of(context).textTheme.bodySmall,
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15),
+                        borderSide: BorderSide(color: Colors.white)),
+                  ),
+                  onSubmitted: (value) {
+                    getPrayerTime();
+                  },
+                ),
+              )
+            ],
           ),
           const SizedBox(
             height: 20,
@@ -102,7 +145,7 @@ class _PrayerTimeScreenState extends State<PrayerTimeScreen> {
   Widget _bodyWidget() {
     if (isLoading) {
       return _loadingWidget();
-    } else if (time.today == null) {
+    } else if (time.data?.timings == null) {
       return _emptyWidget();
     } else {
       return _prayerTimeWidget();
@@ -127,27 +170,30 @@ class _PrayerTimeScreenState extends State<PrayerTimeScreen> {
   }
 
   Widget _prayerTimeWidget() {
+    var timing = time.data?.timings;
+    var date = time.data?.date?.readable;
+
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "${time.city}",
+            "${cityController.text}, ${countryController.text}",
             style: Theme.of(context).textTheme.bodyLarge,
           ),
           Text(
-            "${time.date}",
+            "$date",
             style: Theme.of(context).textTheme.bodyMedium,
           ),
           const SizedBox(
             height: 30,
           ),
-          _timeCard("Fajr", "${time.today?.fajr}"),
-          _timeCard("Sunrise", "${time.today?.sunrise}"),
-          _timeCard("Dhuhr", "${time.today?.dhuhr}"),
-          _timeCard("Asr", "${time.today?.asr}"),
-          _timeCard("Maghrib", "${time.today?.maghrib}"),
-          _timeCard("Ishak", "${time.today?.ishaA}"),
+          _timeCard("Fajr", "${timing?.fajr}"),
+          _timeCard("Sunrise", "${timing?.sunrise}"),
+          _timeCard("Dhuhr", "${timing?.dhuhr}"),
+          _timeCard("Asr", "${timing?.asr}"),
+          _timeCard("Maghrib", "${timing?.maghrib}"),
+          _timeCard("Ishak", "${timing?.isha}"),
           const SizedBox(
             height: 20,
           ),
